@@ -4,24 +4,37 @@ const cheerio = require('cheerio');
 const getLinks = require('./getLinks');
 const createFileList = require('./createFileList');
 const fs = require('fs');
-
+const config = require('./config.json');
 
 var archives = getLinks('input_list.txt');
 var listOfLinks = [];
 
-archives.forEach(async function(archive){
+async function asyncForEach(array, callback){
+	for(let i = 0; i < array.length; i++){
+		await callback( array[i] );
+	}
+}
+
+asyncForEach( archives, async function(archive){
 	try{
+		console.log(`Copying from ${archive}`);
 		var body = await rp(archive);
 		var $ = cheerio.load(body);
-		$(".header-post h2 a").each(function(){
-			fs.appendFileSync("output_list.txt", $(this).attr("href") +"\n");
+		if(  !$(config.post.selector).href ) {
+			throw "Please check the selector and try again.";
+		}
+		$(config.post.selector).each(function(){
+			listOfLinks.push( $(this).attr("href") );
 		});
-		console.log("inner");
 	}
 	catch(error){
 		console.log("\n" + "Error: " + error);
 		console.log("Archive: " + archive + "\n");
 	}
+}).then( ()=>{
+	fs.writeFileSync("output_list.txt", listOfLinks.join("\n") );
+	console.log("Done")
 });
+
 
 

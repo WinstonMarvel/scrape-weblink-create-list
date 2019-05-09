@@ -1,0 +1,5 @@
+{
+	"post": {
+		"selector": "h1.entry-title"
+	}
+}
