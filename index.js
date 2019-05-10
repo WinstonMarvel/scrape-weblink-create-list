@@ -4,7 +4,12 @@ const cheerio = require('cheerio');
 const getLinks = require('./getLinks');
 const createFileList = require('./createFileList');
 const fs = require('fs');
-const config = require('./config.json');
+let selector = process.argv[2];
+
+if(!selector){
+	console.log("Error: Incorrect parameters supplied");
+	process.exit(1);
+}
 
 var archives = getLinks('input_list.txt');
 var listOfLinks = [];
@@ -20,10 +25,10 @@ asyncForEach( archives, async function(archive){
 		console.log(`Copying from ${archive}`);
 		var body = await rp(archive);
 		var $ = cheerio.load(body);
-		if(  !$(config.post.selector).href ) {
+		if(  !$(selector).attr("href") ) {
 			throw "Please check the selector and try again.";
 		}
-		$(config.post.selector).each(function(){
+		$(selector).each(function(){
 			listOfLinks.push( $(this).attr("href") );
 		});
 	}
