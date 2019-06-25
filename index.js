@@ -3,11 +3,12 @@ const rp = require('request-promise-native');
 const cheerio = require('cheerio');
 const getLinks = require('./getLinks');
 const createFileList = require('./createFileList');
+const chalk = require('chalk');
 const fs = require('fs');
 let selector = process.argv[2];
 
 if(!selector){
-	console.log("Error: Incorrect parameters supplied");
+	console.log( chalk.red("Error: Incorrect parameters supplied") );
 	process.exit(1);
 }
 
@@ -22,8 +23,13 @@ async function asyncForEach(array, callback){
 
 asyncForEach( archives, async function(archive){
 	try{
-		console.log(`Copying from ${archive}`);
-		var body = await rp(archive);
+		console.log( chalk.blue(`Copying from ${archive}`) );
+		var body = await rp({
+			uri: archive,
+			headers : {
+				'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36'
+			}
+		});
 		var $ = cheerio.load(body);
 		if(  !$(selector).attr("href") ) {
 			throw "Please check the selector and try again.";
@@ -33,12 +39,12 @@ asyncForEach( archives, async function(archive){
 		});
 	}
 	catch(error){
-		console.log("\n" + "Error: " + error);
-		console.log("Archive: " + archive + "\n");
+		console.log( chalk.red("\n" + "Error: " + error) );
+		console.log( chalk.red("Archive: " + archive + "\n") );
 	}
 }).then( ()=>{
 	fs.writeFileSync("output_list.txt", listOfLinks.join("\n") );
-	console.log("Done")
+	console.log( chalk.green("Done! Posts should be in the output text file. Check if the number of posts is correct.") );
 });
 
 
